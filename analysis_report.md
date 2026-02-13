@@ -32,7 +32,9 @@
 ## 3. 全方位优化改进方案
 
 ### 3.1 架构级优化：从“磁盘中心”转向“流式中心”
-*   **流式解码 (已在 SyncNetInstance 中初步实现)**：我们已将 `SyncNetInstance.py` 中的 ffmpeg 离线抽帧逻辑替换为 `cv2.VideoCapture` 流式读取。这消除了处理长视频时产生海量临时图片的 IO 瓶颈。
+*   **流式特征提取 (已在 SyncNetInstance 中实现)**：我们已彻底重构了 `SyncNetInstance.py`。
+    - **内存优化**：采用流式批处理（Streaming Batch Processing），不再一次性加载全量视频帧。即使是 5 小时的 1080p 视频，内存占用也将保持在极低水平（仅保留当前 Batch 所需的数帧）。
+    - **IO 优化**：删除了 ffmpeg 离线抽帧逻辑，改用 `cv2.VideoCapture` 直接读取视频流，消除了海量小文件产生的磁盘 IO 瓶颈。
 *   **进阶建议 (Decord/NVDEC)**：对于更高性能需求，建议进一步引入 `decord` 库或 NVIDIA 原生硬解码 `NVDEC`，直接将视频帧读取到 GPU 显存中，跳过 CPU 到 GPU 的拷贝。
 *   **异步并行流水线**：将“视频解码”、“人脸检测”、“特征提取”和“同步判断”分为独立线程/进程，形成流水线（Pipeline），实现 3080ti 的全负载运行。
 
