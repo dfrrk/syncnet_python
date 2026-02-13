@@ -1,0 +1,12 @@
+torch
+torchvision
+numpy
+scipy
+opencv-python
+python_speech_features
+librosa
+decord
+insightface
+onnxruntime-gpu
+scenedetect
+filterpy

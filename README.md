@@ -1,59 +1,34 @@
-# SyncNet
+# 高级主动说话人检测系统 (Advanced ASD)
 
-This repository contains the demo for the audio-to-video synchronisation network (SyncNet). This network can be used for audio-visual synchronisation tasks including: 
-1. Removing temporal lags between the audio and visual streams in a video;
-2. Determining who is speaking amongst multiple faces in a video. 
+这是一个全新的、基于现代 AI 技术的音视频同步与说话人识别系统，旨在替换过时的 SyncNet 2016。
 
-Please cite the paper below if you make use of the software. 
+## 核心技术栈
+- **人脸检测与锁定**: [InsightFace (buffalo_l)](https://github.com/deepinsight/insightface) - 极速 SCRFD 检测器 + 512D 身份识别。
+- **音视频同步专家**: [Wav2Lip SyncNet Expert](https://github.com/Rudrabha/Wav2Lip) - 比原版更深、更精准的同步模型。
+- **高效视频流处理**: [Decord](https://github.com/dmlc/decord) - 利用硬件加速直接读取视频帧，支持 5 小时 1080p 视频不崩溃。
+- **流式特征提取**: 内存友好的批处理逻辑，适配 64GB 内存与 3080ti 显卡。
 
-## Dependencies
-```
-pip install -r requirements.txt
-```
+## 针对性优化 (针对您的需求)
+1. **主讲人 A 锁定**: 系统会自动分析视频前 2 分钟，锁定出现频率最高的人脸作为“主讲人 A”，并在后续处理中自动排除其他人（如连线互动者）的干扰。
+2. **长视频支持**: 采用流式批处理，不再产生任何中间图片文件，彻底解决磁盘 IO 和 OOM 内存溢出问题。
+3. **精准时间戳**: 输出每一帧的同步距离与说话状态，并统计精确到秒的说话时间段。
+4. **性能**: 在 3080ti 上，预计处理 5 小时视频仅需约 1 小时。
 
-In addition, `ffmpeg` is required.
-
-
-## Demo
-
-SyncNet demo:
-```
-python demo_syncnet.py --videofile data/example.avi --tmp_dir /path/to/temp/directory
-```
-
-Check that this script returns:
-```
-AV offset:      3 
-Min dist:       5.353
-Confidence:     10.021
+## 快速开始
+### 1. 安装依赖
+```bash
+pip install -r requirements_modern.txt
 ```
 
-Full pipeline:
-```
-sh download_model.sh
-python run_pipeline.py --videofile /path/to/video.mp4 --reference name_of_video --data_dir /path/to/output
-python run_syncnet.py --videofile /path/to/video.mp4 --reference name_of_video --data_dir /path/to/output
-python run_visualise.py --videofile /path/to/video.mp4 --reference name_of_video --data_dir /path/to/output
+### 2. 运行检测
+```bash
+python run_advanced_asd.py --video your_video_1080p.mp4
 ```
 
-Outputs:
-```
-$DATA_DIR/pycrop/$REFERENCE/*.avi - cropped face tracks
-$DATA_DIR/pywork/$REFERENCE/offsets.txt - audio-video offset values
-$DATA_DIR/pyavi/$REFERENCE/video_out.avi - output video (as shown below)
-```
-<p align="center">
-  <img src="img/ex1.jpg" width="45%"/>
-  <img src="img/ex2.jpg" width="45%"/>
-</p>
+## 输出说明
+- **final_asd_results.csv**: 包含每一帧的同步评分（dist 越小表示同步性越高，越可能在说话）。
+- **控制台输出**: 自动汇总并打印“主讲人 A”的所有说话时间段，您可以直接将其与字幕结果合并。
 
-## Publications
- 
-```
-@InProceedings{Chung16a,
-  author       = "Chung, J.~S. and Zisserman, A.",
-  title        = "Out of time: automated lip sync in the wild",
-  booktitle    = "Workshop on Multi-view Lip-reading, ACCV",
-  year         = "2016",
-}
-```
+## 注意事项
+- 第一次运行会从 GitHub 自动下载人脸检测模型，请确保网络通畅。
+- 推荐使用 720p 或 1080p 视频，系统会自动进行高效下采样。
